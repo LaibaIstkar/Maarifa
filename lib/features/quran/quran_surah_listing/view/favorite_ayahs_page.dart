@@ -12,7 +12,7 @@ import 'package:maarifa/features/quran/quran_surah_listing/service/audio_control
 import 'package:maarifa/features/quran/quran_surah_listing/service/quran_audio_service.dart';
 
 class FavoriteAyahsPage extends ConsumerStatefulWidget {
-  const FavoriteAyahsPage({Key? key}) : super(key: key);
+  const FavoriteAyahsPage({super.key});
 
   @override
   ConsumerState<FavoriteAyahsPage> createState() => _FavoriteAyahsPageState();
@@ -115,7 +115,10 @@ class _FavoriteAyahsPageState extends ConsumerState<FavoriteAyahsPage> {
                                 final audioUrl = await _audioService.fetchAyahAudioUrl(favoriteAyah.ayahNumber);
                                 await ref.read(audioControllerProvider.notifier).playAyah(audioUrl, favoriteAyah.ayahNumber);
                               } catch (e) {
-                                print('Error playing ayah audio: $e');
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Sorry, failed to load audio, please check internet connection: $e')),
+                                );
                               }
                             }
                             setState(() {}); // Ensure the UI updates after pressing play
@@ -156,7 +159,7 @@ class _FavoriteAyahsPageState extends ConsumerState<FavoriteAyahsPage> {
                   textDirection: TextDirection.rtl,
                   style: TextStyle(
                     fontSize: 25,
-                    fontFamily: 'AmiriRegular',
+                    fontFamily: 'AmiriRegularNormal',
                     color: isDarkTheme ? Colors.white : Colors.black,
                     height: 2.2,
                   ),

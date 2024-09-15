@@ -5,11 +5,10 @@ class QuranAudioService {
   Future<String> fetchAyahAudioUrl(int ayahNumber) async {
     final url = Uri.parse('http://api.alquran.cloud/v1/ayah/$ayahNumber/ar.alafasy');
     final response = await http.get(url);
-    print(response.body);
+
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      print(data);
       return data['data']['audio']; // Fetch the audio URL
     } else {
       throw Exception('Failed to load Ayah audio');

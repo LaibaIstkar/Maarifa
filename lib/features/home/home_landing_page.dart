@@ -5,6 +5,7 @@ import 'package:maarifa/core/theme/app_colors.dart';
 import 'package:maarifa/core/theme/app_colors_dark.dart';
 import 'package:maarifa/core/theme/theme_notifier.dart';
 import 'package:maarifa/core/widgets/bottom_navbar.dart';
+import 'package:maarifa/features/hadith/hadith_section.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/view/quran_list_page.dart';
 
 import 'package:maarifa/features/settings/settings_page.dart';
@@ -152,6 +153,13 @@ class _HomeLandingPageState extends ConsumerState<HomeLandingPage> {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => const QuranListPage(),
+                          ),
+                        );
+                      }
+                      if (index == 1) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>  const HadithSection(),
                           ),
                         );
                       }

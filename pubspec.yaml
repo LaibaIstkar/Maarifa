@@ -44,6 +44,8 @@ dependencies:
   hive_flutter: ^1.1.0
   google_fonts: ^6.2.1
   audioplayers: ^6.1.0
+  hadith: ^1.0.0
+  html: ^0.15.4
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -114,6 +116,10 @@ flutter:
      - family: Kaleem
        fonts:
          - asset: assets/KaleemRegular.otf
+           style: normal
+     - family: Bismillah
+       fonts:
+         - asset: assets/arabic.ttf
            style: normal
   #
   # For details regarding fonts from package dependencies,
