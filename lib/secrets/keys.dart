@@ -1,3 +1,0 @@
-const url = 'https://tujdrdrybiusritiatvg.supabase.co';
-const deleteuserfunc = "https://tujdrdrybiusritiatvg.supabase.co/functions/v1/delete_user_account";
-const anonKey= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1amRyZHJ5Yml1c3JpdGlhdHZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwMDMzNjQsImV4cCI6MjAzODU3OTM2NH0.FfKOVu4O9zCFT7E_7JCn_UkE7-W8teQrj5NqeRd2AXI';
