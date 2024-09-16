@@ -44,3 +44,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# And do not ignore the release APK
+!/build/app/outputs/apk/release/app-release.apk
