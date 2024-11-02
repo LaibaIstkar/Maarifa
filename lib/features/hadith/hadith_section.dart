@@ -5,6 +5,7 @@ import 'package:hadith/hadith.dart';
 import 'package:maarifa/core/theme/app_colors.dart';
 import 'package:maarifa/core/theme/app_colors_dark.dart';
 import 'package:maarifa/core/theme/theme_notifier.dart';
+import 'package:maarifa/features/hadith/favorite_hadith_page.dart';
 import 'package:maarifa/features/hadith/hadith_detail_page.dart';
 
 class HadithSection extends ConsumerStatefulWidget {
@@ -18,19 +19,28 @@ class _HadithSectionState extends ConsumerState<HadithSection> {
   Collections? selectedCollection;
   List<Book>? books;
   List<Hadith>? hadiths;
-  int? selectedBookIndex; // Track the index of the selected book
-  int? selectedCollectionIndex = 0; // Track the index of the selected collection (default to first collection)
+  int? selectedBookIndex;
+  int selectedCollectionIndex = 0;
+
+  final PageController _pageController = PageController(viewportFraction: 0.4);
 
   @override
   void initState() {
     super.initState();
-    // Automatically select the first collection (e.g., Bukhari) and fetch its books
-    selectCollection(Collections.values[selectedCollectionIndex!], selectedCollectionIndex!);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      selectCollection(Collections.values[selectedCollectionIndex], selectedCollectionIndex);
+    });
   }
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   void selectCollection(Collections collection, int index) async {
     var books = getBooks(collection);
+
     setState(() {
       selectedCollection = collection;
       selectedCollectionIndex = index;
@@ -38,14 +48,34 @@ class _HadithSectionState extends ConsumerState<HadithSection> {
       hadiths = null;
       selectedBookIndex = 0;
     });
+
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   void selectBook(int index, int bookNumber) async {
-    var hadiths = getHadiths(selectedCollection!, bookNumber); // Fetch hadiths for the book
+    var hadiths =  getHadiths(selectedCollection!, bookNumber);
     setState(() {
       this.hadiths = hadiths;
-      selectedBookIndex = index; // Mark this book as selected
+      selectedBookIndex = index;
     });
+  }
+
+  void onSwipeLeft() {
+    if (selectedCollectionIndex > 0) {
+      int newIndex = selectedCollectionIndex - 1;
+      selectCollection(Collections.values[newIndex], newIndex);
+    }
+  }
+
+  void onSwipeRight() {
+    if (selectedCollectionIndex < Collections.values.length - 1) {
+      int newIndex = selectedCollectionIndex + 1;
+      selectCollection(Collections.values[newIndex], newIndex);
+    }
   }
 
   @override
@@ -54,13 +84,42 @@ class _HadithSectionState extends ConsumerState<HadithSection> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "Hadith",
-          style: TextStyle(
-            fontSize: 17,
-            color: isDarkTheme ? Colors.white : Colors.black,
-            fontFamily: 'PoppinsBold',
+        title: Row(
+          children: [
+            Text(
+            "Hadith",
+            style: TextStyle(
+              fontSize: 17,
+              color: isDarkTheme ? Colors.white : Colors.black,
+              fontFamily: 'PoppinsBold',
+            ),
           ),
+
+            IconButton(
+              icon: const Icon(Icons.favorite, color: Colors.red),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  const FavoriteHadithPage(),
+                  ),
+                );
+              },
+            ),
+            Flexible(
+              child: Center(
+                child: Text(
+                  'Hadith Challenge',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontFamily: 'PoppinsBold',
+                    color: isDarkTheme ? AppColorsDark.purpleColor  : AppColors.spaceCadetColor,
+                  ),
+                ),
+              ),
+            ),
+
+        ]
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: isDarkTheme ? Colors.white : Colors.black),
@@ -71,198 +130,172 @@ class _HadithSectionState extends ConsumerState<HadithSection> {
         backgroundColor: isDarkTheme ? Colors.black26 : Colors.white,
 
       ),
-      body: Column(
-        children: [
-          // Horizontal list for collections (books)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: Collections.values.asMap().entries.map((entry) {
-                int index = entry.key;
-                Collections collection = entry.value;
-                bool isSelected = selectedCollectionIndex == index;
-
-                return GestureDetector(
-                  onTap: () => selectCollection(collection, index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 500),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: (isDarkTheme
-                              ? (isSelected ? AppColorsDark.purpleColor : Colors.transparent)
-                              : (isSelected ? AppColors.purpleColor : Colors.transparent)),
-                          width: 3.0,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      collection.name.toUpperCase(),
-                      style: TextStyle(
-                        fontFamily: isSelected ? 'PoppinsBold' : 'Poppins',
-                        color: isDarkTheme ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-
-          // Display chapters (books) in vertical list
-          if (books != null)
-          // Inside the ListView.builder for displaying chapters (books)
-            Expanded(
-              child: ListView.builder(
-                itemCount: books!.length,
+      body: GestureDetector(
+        onHorizontalDragEnd: (DragEndDetails details) {
+          if (details.primaryVelocity != null) {
+            if (details.primaryVelocity! < 0) {
+              onSwipeRight();
+            } else if (details.primaryVelocity! > 0) {
+              onSwipeLeft();
+            }
+          }
+        },
+        child: Column(
+          children: [
+            // Horizontal list for collections (books) using PageView
+            SizedBox(
+              height: 100, // Set a fixed height for the collection view
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: Collections.values.length,
+                onPageChanged: (index) {
+                  selectCollection(Collections.values[index], index);
+                },
                 itemBuilder: (context, index) {
-
-                  Color tileColor = (index % 2 == 0)
-                      ? (isDarkTheme ? Colors.grey[900]! : Colors.white) // Even index
-                      : (isDarkTheme ? Colors.grey[850]! : Colors.grey[200]!); // Odd index
-
-                  // Extract Arabic and English names from the book details
-                  List<BookData> bookDataList = books![index].book;
-                  String arabicName = bookDataList
-                      .firstWhere((element) => element.lang == 'ar', orElse: () => BookData(lang: 'ar', name: 'No Arabic Name'))
-                      .name;
-                  String englishName = bookDataList
-                      .firstWhere((element) => element.lang == 'en', orElse: () => BookData(lang: 'en', name: 'No English Name'))
-                      .name;
+                  Collections collection = Collections.values[index];
+                  bool isSelected = selectedCollectionIndex == index;
 
                   return GestureDetector(
-                    onTap: () => selectBook(index, books![index].bookNumber as int),
+                    onTap: () => selectCollection(collection, index),
                     child: Container(
-                      color: tileColor,
-                      child: ListTile(
-                        title: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Display the book number
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                books![index].bookNumber,
-                                style: TextStyle(
-                                  color: isDarkTheme ? Colors.grey : Colors.black54,
-                                  fontFamily: 'Poppins'
-                                ),
-                              ),
-                            ),
-                            // Display Arabic name
-                            const SizedBox(height: 5),
-
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                arabicName,
-                                style: TextStyle(
-                                  color: isDarkTheme ? Colors.white : Colors.black,
-                                  fontSize: 16,
-                                  fontFamily: 'AmiriRegularNormal',
-                                ),
-                              ),
-                            ),
-                            // Display English name
-                            const SizedBox(height: 5),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                englishName,
-                                style: TextStyle(
-                                    color: isDarkTheme ? Colors.grey : Colors.black,
-                                    fontSize: 14,
-                                  fontFamily: 'Poppins'
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                '${books![index].hadithStartNumber} - ${books![index].hadithEndNumber}',
-                                style: TextStyle(
-                                    color: isDarkTheme ? Colors.grey : Colors.black,
-                                    fontSize: 12,
-                                    fontFamily: 'Poppins'
-                                ),
-                              ),
-                            ),
-                          ],
+                      margin: const EdgeInsets.only(left: 0.0, right: 0),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 500),
+                        padding: const EdgeInsets.all(10),
+                        margin: isSelected ? const EdgeInsets.only(left: 0,right: 0, top: 5, bottom: 5) : const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? (isDarkTheme ? AppColorsDark.purpleColor : AppColors.primaryColorPlatinum)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10.0),
+                          border: Border.all(
+                            color: isSelected
+                                ? (isDarkTheme ? AppColorsDark.purpleColor : AppColors.purpleColor)
+                                : Colors.transparent,
+                            width: 2.0,
+                          ),
                         ),
-                          onTap: () async {
-
-                            print(books![index].bookNumber);
-                            print(getHadithDataByNumber(Collections.ibnmajah, '266', Languages.en));
-
-                            int bookNumber = int.parse(books![index].bookNumber);  // Convert String to int
-
-                            print(bookNumber);
-
-                            // Check if the book number is numeric before parsing
-                            if (books![index].bookNumber.isNotEmpty) {
-                              // If the book number is numeric, convert it to an integer and fetch hadiths
-                              int bookNumber = int.parse(books![index].bookNumber);
-                              var hadiths = getHadiths(selectedCollection!, bookNumber);
-
-                              print(hadiths);
-                              print('$bookNumber null');
-
-                              // Navigate to HadithDetailPage with the numeric book number
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => HadithDetailPage(
-                                    selectedCollection: selectedCollection!,
-                                    bookNumber: bookNumber,  // Pass the book number as an int
-                                    hadiths: hadiths,
-                                  ),
-                                ),
-                              );
-                            } else {
-                              // Handle the case where the book number is not numeric (e.g., "introduction")
-                              var hadiths = getHadiths(selectedCollection!, 0); // Adjust to handle string bookNumber
-
-
-
-                              print('$bookNumber string');
-
-                              print(getHadithDataByNumber(Collections.nasai, '1', Languages.en));
-
-                              // Navigate to HadithDetailPage with a string book number (non-numeric)
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => HadithDetailPage(
-                                    selectedCollection: selectedCollection!,
-                                    bookNumber: bookNumber,  // Pass the book number as a string for non-numeric cases
-                                    hadiths: hadiths,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-
-
-
-
-
-                    ),
+                        child: Center(
+                          child: Text(
+                            collection.name.toUpperCase(),
+                            style: TextStyle(
+                              fontFamily: isSelected ? 'PoppinsBold' : 'Poppins',
+                              color: isDarkTheme ? Colors.white : Colors.black,
+                              fontSize: isSelected ? 16 : 13
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   );
                 },
               ),
             ),
-        ],
+
+            // Display chapters (books) in vertical list
+            if (books != null)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: books!.length,
+                  itemBuilder: (context, index) {
+                    if (!isNumeric(books![index].bookNumber)) {
+                      return const SizedBox.shrink();
+                    }
+
+                    Color tileColor = (index % 2 == 0)
+                        ? (isDarkTheme ? Colors.grey[900]! : Colors.white)
+                        : (isDarkTheme ? Colors.grey[850]! : Colors.grey[200]!);
+
+                    List<BookData> bookDataList = books![index].book;
+                    String arabicName = bookDataList
+                        .firstWhere((element) => element.lang == 'ar', orElse: () => BookData(lang: 'ar', name: 'No Arabic Name'))
+                        .name;
+                    String englishName = bookDataList
+                        .firstWhere((element) => element.lang == 'en', orElse: () => BookData(lang: 'en', name: 'No English Name'))
+                        .name;
+
+                    return GestureDetector(
+                      onTap: () {
+                        String bookNumber = books![index].bookNumber;
+                        var hadiths = getHadiths(selectedCollection!, int.parse(bookNumber));
+
+                        int bookNum = int.parse(bookNumber);
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HadithDetailPage(
+                              bookNumber: bookNum,
+                              hadiths: hadiths,
+                              selectedCollection: selectedCollection!,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        color: tileColor,
+                        child: ListTile(
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  books![index].bookNumber,
+                                  style: TextStyle(
+                                      color: isDarkTheme ? Colors.grey : Colors.black54,
+                                      fontFamily: 'Poppins'),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  arabicName,
+                                  style: TextStyle(
+                                    color: isDarkTheme ? Colors.white : Colors.black,
+                                    fontSize: 16,
+                                    fontFamily: 'AmiriRegularNormal',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  englishName,
+                                  style: TextStyle(
+                                      color: isDarkTheme ? Colors.grey : Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins'),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '${books![index].hadithStartNumber} - ${books![index].hadithEndNumber}',
+                                  style: TextStyle(
+                                      color: isDarkTheme ? Colors.grey : Colors.black,
+                                      fontSize: 12,
+                                      fontFamily: 'Poppins'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
   bool isNumeric(String s) {
-    if (s == null) {
-      return false;
-    }
     return int.tryParse(s) != null;
   }
 }

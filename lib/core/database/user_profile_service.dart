@@ -26,9 +26,8 @@ class UserProfileService {
     }
 
     // Get the public URL of the uploaded image
-    final avatarUrl = supabase.storage.from('avatars').getPublicUrl(fileName)!;
+    final avatarUrl = supabase.storage.from('avatars').getPublicUrl(fileName);
 
-    // Update the user's profile in the 'profiles' table
     final updateResponse = await supabase.from('profiles').update({'avatar_url': avatarUrl}).eq('id', user.id);
     if (updateResponse.error != null) {
       throw Exception('Failed to update profile picture URL: ${updateResponse.error!.message}');

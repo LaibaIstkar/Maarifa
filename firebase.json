@@ -12,5 +12,41 @@
         "destination": "/index.html"
       }
     ]
-  }
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "maarifa-37a5c",
+          "appId": "1:1042702112366:android:4948a7283c3e777acdf87f",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "maarifa-37a5c",
+          "configurations": {
+            "android": "1:1042702112366:android:4948a7283c3e777acdf87f",
+            "ios": "1:1042702112366:ios:3c2b771db85c9d05cdf87f"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
 }

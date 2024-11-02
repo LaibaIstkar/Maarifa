@@ -1,27 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:maarifa/core/database/supabaseservice.dart';
 import 'package:maarifa/core/theme/theme_notifier.dart';
-import 'package:maarifa/features/account_service/delete_account_service.dart';
-import 'package:maarifa/features/auth/sign_in/signin_page.dart';
+import 'package:maarifa/features/auth/view_model/auth_view_model.dart';
+import 'package:maarifa/features/home/home_landing_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
+  @override
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
 
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  String email = '';
+  String password = '';
+  bool isDeleting = false;
+
+  bool isNotificationsMuted = false;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _loadNotificationSetting();
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDarkTheme = ref.watch(themeNotifierProvider);
-    final supabase = SupabaseService().supabaseClient;
-    final deleteAccountService = DeleteAccountService(supabase: supabase);
+    final authViewModel = ref.read(authViewModelProvider);
+    final isUserSignedIn = authViewModel.isUserSignedIn();
+    final themeNotifier = ref.read(themeNotifierProvider.notifier);
+
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: isDarkTheme ? Colors.black26 : Colors.white,
         title: const Text('Settings'),
         automaticallyImplyLeading: false,
-        titleTextStyle: TextStyle(color: isDarkTheme ? Colors.white : Colors.black, fontSize: 17),
+        titleTextStyle: TextStyle(
+          color: isDarkTheme ? Colors.white : Colors.black,
+          fontSize: 17,
+        ),
       ),
       body: Center(
         child: Column(
@@ -37,45 +58,87 @@ class SettingsPage extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 20),
-            ListTile(
+
+            // Notifications Switch
+            SwitchListTile(
+              value: isNotificationsMuted,
               title: Text(
-                'Log Out',
+                'Mute All Notifications',
                 style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
               ),
-              leading: const Icon(Icons.logout),
-              onTap: ()
-              async {
-                final navigator = Navigator.of(context);
-                await supabase.auth.signOut();
-                navigator.pushReplacement(
-                  MaterialPageRoute(builder: (context) => const SignInPage()),
-                );
+              onChanged: (bool value) async {
+                setState(() {
+                  isNotificationsMuted = value;
+                });
+                await _saveNotificationSetting(value);
               },
             ),
+
             const SizedBox(height: 20),
-            ListTile(
-              title: const Text(
-                'Delete Account',
-                style: TextStyle(color: Colors.red),
+            if (isUserSignedIn && !isDeleting) ...[
+              ListTile(
+                title: Text(
+                  'Log Out',
+                  style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
+                ),
+                leading: const Icon(Icons.logout),
+                onTap: () async {
+                  await authViewModel.signOut();
+
+                  if (!context.mounted) return;
+
+                  if(isDarkTheme) {
+
+                    themeNotifier.toggleTheme();
+
+                  }
+
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const HomeLandingPage()),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Signed out'),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                  );
+                },
               ),
-              leading: const Icon(Icons.delete, color: Colors.red),
-              onTap: () {
-                _showDeleteAccountDialog(context, deleteAccountService);
-              },
-            ),
+              const SizedBox(height: 20),
+              ListTile(
+                title: const Text(
+                  'Delete Account',
+                  style: TextStyle(color: Colors.red),
+                ),
+                leading: const Icon(Icons.delete, color: Colors.red),
+                onTap: () {
+                  _showDeleteAccountDialog();
+                },
+              ),
+            ] else if (isDeleting) ...[
+
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              const Text('Deleting Account...'),
+            ]
           ],
         ),
       ),
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context, DeleteAccountService deleteAccountService) {
+  // Show the delete account confirmation dialog
+  void _showDeleteAccountDialog() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Confirm Delete'),
-          content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+          content: const Text(
+              'Are you sure you want to delete your account? This action cannot be undone.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -84,20 +147,9 @@ class SettingsPage extends ConsumerWidget {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () async {
-                final navigator = Navigator.of(context);
-                navigator.pop();
-                _showDeletingDialog(context);
-
-                // Perform the delete operation
-                final isDeleted = await deleteAccountService.deleteAccount();
-
-                if (isDeleted) {
-                  // If successful, navigate to the sign-in page
-                  navigator.pushReplacement(
-                    MaterialPageRoute(builder: (context) => const SignInPage()),
-                  );
-                }
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the confirmation dialog
+                _showReauthenticationDialog(); // Show the re-authentication dialog
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
@@ -107,18 +159,108 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-
-
-  void _showDeletingDialog(BuildContext context) {
+  // Show re-authentication dialog to get the user's credentials before account deletion
+  void _showReauthenticationDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (context) {
-        return const AlertDialog(
-          title: Text('Deleting Account'),
-          content: Text('We are sorry to see you go...'),
+        return AlertDialog(
+          title: const Text('Re-authenticate'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: const InputDecoration(labelText: 'Email'),
+                onChanged: (value) {
+                  email = value;
+                },
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Password'),
+                obscureText: true,
+                onChanged: (value) {
+                  password = value;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the dialog
+                await _deleteAccount();
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
         );
       },
     );
   }
+
+  // Delete account logic
+  Future<void> _deleteAccount() async {
+    setState(() {
+      isDeleting = true;
+    });
+
+    final authViewModel = ref.read(authViewModelProvider);
+    try {
+      // Re-authenticate and delete user account
+      await authViewModel.deleteUserAccount(email, password);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Account deleted successfully'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+        ),
+      );
+
+
+
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeLandingPage()),
+      );
+    } catch (e) {
+      setState(() {
+        isDeleting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+        ),
+      );
+    }
+  }
+
+  // Load the notification setting from SharedPreferences or any persistent storage
+  Future<void> _loadNotificationSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isNotificationsMuted = prefs.getBool('isNotificationsMuted') ?? false;
+    });
+  }
+
+  // Save the notification setting when toggled
+  Future<void> _saveNotificationSetting(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isNotificationsMuted', value);
+  }
+
 }
+

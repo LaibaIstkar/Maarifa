@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:maarifa/features/quran/quran_surah_listing/model/surah.dart';
-import 'package:maarifa/features/quran/quran_surah_listing/model/surah_detail.dart';
-
+import 'package:maarifa/core/models/quran_model/surah.dart';
+import 'package:maarifa/core/models/quran_model/surah_detail.dart';
 
 class QuranService {
   final String _baseUrl = 'https://api.alquran.cloud/v1';

@@ -7,7 +7,7 @@ import 'package:hive/hive.dart';
 import 'package:maarifa/core/theme/app_colors.dart';
 import 'package:maarifa/core/theme/app_colors_dark.dart';
 import 'package:maarifa/core/theme/theme_notifier.dart';
-import 'package:maarifa/features/quran/quran_surah_listing/model/favoriteayah.dart';
+import 'package:maarifa/core/models/quran_model/favoriteayah.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/service/audio_controller.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/service/quran_audio_service.dart';
 

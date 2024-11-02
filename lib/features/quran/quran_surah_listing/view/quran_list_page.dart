@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maarifa/core/theme/app_colors.dart';
 import 'package:maarifa/core/theme/app_colors_dark.dart';
 import 'package:maarifa/core/theme/theme_notifier.dart';
-import 'package:maarifa/features/quran/quran_surah_listing/model/surah.dart';
+import 'package:maarifa/core/models/quran_model/surah.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/view/favorite_ayahs_page.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/view/surah_details_page.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/viewmodel/quran_view_model.dart';
@@ -22,13 +22,12 @@ class _QuranListPageState extends ConsumerState<QuranListPage> {
   List<Surah> _filteredSurahs = [];
   String _searchQuery = '';
 
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     ref.read(quranViewModelProvider.notifier).fetchAndStoreSurah();
-    for (int i = 1; i <= 114; i++) {
-      ref.read(quranViewModelProvider.notifier).fetchSurahDetail(i);
-    }
+
   }
 
   @override
@@ -36,14 +35,13 @@ class _QuranListPageState extends ConsumerState<QuranListPage> {
     final surahs = ref.watch(quranViewModelProvider);
     final isDarkTheme = ref.watch(themeNotifierProvider);
 
-    // Filter surahs based on the search query
     _filteredSurahs = _searchQuery.isEmpty
-        ? surahs // If search is empty, show all surahs
+        ? surahs
         : surahs.where((surah) => surah.englishName.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Row( // Use Row for horizontal layout of elements
+        title: Row(
           children: [
             Visibility(
               visible: !_isSearchExpanded,
@@ -115,11 +113,10 @@ class _QuranListPageState extends ConsumerState<QuranListPage> {
                   setState(() {
                     _isSearchExpanded = false;
                     _searchController.clear();
-                    _searchQuery = ''; // Reset search query when closed
+                    _searchQuery = '';
                   });
                 },
               ),
-            const SizedBox(),
             Visibility(
               visible: !_isSearchExpanded,
               child: Expanded(
@@ -149,7 +146,7 @@ class _QuranListPageState extends ConsumerState<QuranListPage> {
         backgroundColor: isDarkTheme ? Colors.black26 : Colors.white,
       ),
       body: surahs.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: Text('Fetching Quran from API...',style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black ),))
           : ListView.builder(
         itemCount: _filteredSurahs.length,
         itemBuilder: (context, index) {
@@ -183,7 +180,7 @@ class _QuranListPageState extends ConsumerState<QuranListPage> {
                     alignment: Alignment.centerRight, // Align Arabic text to the right
                     child: Text(
                       surah.name,
-                      textDirection: TextDirection.rtl, // Ensure RTL text direction
+                      textDirection: TextDirection.rtl,
                       style: TextStyle(
                         fontSize: 20,
                         fontFamily: 'AmiriRegularNormal',
@@ -193,7 +190,7 @@ class _QuranListPageState extends ConsumerState<QuranListPage> {
                   ),
                   const SizedBox(height: 5),
                   Align(
-                    alignment: Alignment.centerLeft, // Align English text to the left
+                    alignment: Alignment.centerLeft,
                     child: Text(
                       surah.englishName,
                       style: TextStyle(
@@ -228,7 +225,7 @@ class _QuranListPageState extends ConsumerState<QuranListPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sorry, failed to load surah details, please check internet connection: $e')),
+        SnackBar(content: Text('Sorry, failed to load surah details, please check internet connection: $e'), behavior: SnackBarBehavior.floating,),
       );
     }
   }

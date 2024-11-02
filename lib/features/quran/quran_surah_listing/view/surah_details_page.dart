@@ -4,9 +4,9 @@ import 'package:hive/hive.dart';
 import 'package:maarifa/core/theme/app_colors.dart';
 import 'package:maarifa/core/theme/app_colors_dark.dart';
 import 'package:maarifa/core/theme/theme_notifier.dart';
-import 'package:maarifa/features/quran/quran_surah_listing/model/ayah.dart';
-import 'package:maarifa/features/quran/quran_surah_listing/model/favoriteayah.dart';
-import 'package:maarifa/features/quran/quran_surah_listing/model/surah_detail.dart';
+import 'package:maarifa/core/models/quran_model/ayah.dart';
+import 'package:maarifa/core/models/quran_model/favoriteayah.dart';
+import 'package:maarifa/core/models/quran_model/surah_detail.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/service/audio_controller.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/service/quran_audio_service.dart';
 
@@ -103,101 +103,6 @@ class _SurahDetailPageState extends ConsumerState<SurahDetailPage> {
     );
   }
 
-
-  // Widget _buildArabicOnlyView(bool isDarkTheme) {
-  //   bool isPlaying = ref.watch(audioControllerProvider).isPlaying;
-  //   bool isLoading = ref.watch(audioControllerProvider).isLoading;
-  //
-  //   List<InlineSpan> ayahSpans = widget.surah.ayahs.map((ayah) {
-  //     return TextSpan(
-  //       children: [
-  //         // Ayah Text
-  //         TextSpan(
-  //           text: "${ayah.text.trim()} ", // Include space for separation
-  //           style: TextStyle(
-  //             fontSize: 25,
-  //             fontFamily: 'AmiriRegular',
-  //             color: isDarkTheme ? Colors.white : Colors.black,
-  //           ),
-  //         ),
-  //         // Ayah Number inside a circular Container
-  //         WidgetSpan(
-  //           alignment: PlaceholderAlignment.middle,
-  //           child: Container(
-  //             decoration: BoxDecoration(
-  //               shape: BoxShape.circle,
-  //               color: isDarkTheme ? AppColorsDark.cardBackground : AppColors.primaryColorPlatinum,
-  //             ),
-  //             padding: const EdgeInsets.all(10), // Adjust padding as needed
-  //             child: Text(
-  //               ayah.numberInSurah.toString(),
-  //               style: TextStyle(
-  //                 fontFamily: 'Poppins',
-  //                 fontSize: 13,
-  //                 color: isDarkTheme ? Colors.white : Colors.black,
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     );
-  //   }).toList();
-  //
-  //   return Padding(
-  //     padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 60.0),
-  //     child: SingleChildScrollView(
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.center,
-  //         children: [
-  //           Text(
-  //             bismillah,
-  //             textAlign: TextAlign.center,
-  //             style: TextStyle(
-  //               fontSize: 40,
-  //               fontFamily: 'Kaleem',
-  //               color: isDarkTheme ? Colors.white : Colors.black,
-  //             ),
-  //           ),
-  //           if (isLoading)
-  //             const SizedBox(height: 20),
-  //           if (isLoading)
-  //             LinearProgressIndicator(
-  //               minHeight: 2,
-  //               backgroundColor: Colors.grey[300],
-  //               color: isDarkTheme ? AppColorsDark.primaryColorPlatinum : AppColors.spaceCadetColor,
-  //             ),
-  //           const SizedBox(height: 20),
-  //           IconButton(
-  //             icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow, size: 21),
-  //             onPressed: () async {
-  //               if (isLoading) return;
-  //               if (isPlaying) {
-  //                 await ref.read(audioControllerProvider.notifier).stopAyah();
-  //               } else {
-  //                 try {
-  //                   final audioUrls = await _audioService.fetchSurahAudioUrls(widget.surah.number);
-  //                   ref.read(audioControllerProvider.notifier).loadSurah(audioUrls);
-  //                 } catch (e) {
-  //                   if (!mounted) return;
-  //                   ScaffoldMessenger.of(context).showSnackBar(
-  //                     SnackBar(content: Text('Sorry, failed to load audio, please check internet connection: $e')),
-  //                   );
-  //                 }
-  //               }
-  //               setState(() {});
-  //             },
-  //           ),
-  //           const SizedBox(height: 20),
-  //           RichText(
-  //             textAlign: TextAlign.center,
-  //             textDirection: TextDirection.rtl,
-  //             text: TextSpan(children: ayahSpans),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
 
   Widget _buildArabicOnlyView(bool isDarkTheme) {

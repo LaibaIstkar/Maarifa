@@ -10,11 +10,11 @@ class BottomNavBar extends StatelessWidget {
   final bool isDarkTheme;
 
   const BottomNavBar({
-    Key? key,
+    super.key,
     required this.selectedIndex,
     required this.onItemTapped,
     required this.isDarkTheme,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

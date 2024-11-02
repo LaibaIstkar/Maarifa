@@ -7,12 +7,15 @@ class CustomTextFormField extends StatelessWidget {
   final String label;
   final String? Function(String?)? validator;
   final bool obscureText;
+  final int? maxLength; // Added maxLength parameter
 
-  CustomTextFormField({
+  const CustomTextFormField({
+    super.key,
     required this.controller,
     required this.label,
     this.validator,
     this.obscureText = false,
+    this.maxLength,
   });
 
   @override
@@ -21,6 +24,7 @@ class CustomTextFormField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       validator: validator,
+      maxLength: maxLength, // Added maxLength
       style: const TextStyle(
         fontFamily: 'Poppins',
       ),
@@ -30,10 +34,10 @@ class CustomTextFormField extends StatelessWidget {
         filled: true,
         fillColor: AppColors.primaryColorPlatinum,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
         ),
-        floatingLabelBehavior: FloatingLabelBehavior.never, // Makes the hint text disappear without moving up
+        floatingLabelBehavior: FloatingLabelBehavior.never,
       ),
     );
   }

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
@@ -5,14 +6,18 @@ import 'package:maarifa/core/theme/app_colors.dart';
 import 'package:maarifa/core/theme/app_colors_dark.dart';
 import 'package:maarifa/core/theme/theme_notifier.dart';
 import 'package:maarifa/core/widgets/bottom_navbar.dart';
+import 'package:maarifa/features/admin/ui/admin_joined_channels.dart';
+import 'package:maarifa/features/asmaulhusna/asma_ul_husna.dart';
+import 'package:maarifa/features/auth/view/sign_in_page.dart';
+import 'package:maarifa/features/auth/view_model/auth_view_model.dart';
+import 'package:maarifa/features/channels/for_users_channel/ui/users_joined_channels.dart';
 import 'package:maarifa/features/hadith/hadith_section.dart';
+import 'package:maarifa/features/knowledge/view/mainpage/knowledge_page.dart';
 import 'package:maarifa/features/quran/quran_surah_listing/view/quran_list_page.dart';
 
 import 'package:maarifa/features/settings/settings_page.dart';
-import 'package:maarifa/features/user_profile/user_profile.dart';
 import 'dart:math' as math;
 
-import 'package:maarifa/features/user_profile/viewmodel/user_notifier.dart';
 
 class HomeLandingPage extends ConsumerStatefulWidget {
   const HomeLandingPage({super.key});
@@ -35,54 +40,50 @@ class _HomeLandingPageState extends ConsumerState<HomeLandingPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = ref.watch(themeNotifierProvider);
-    final usernameAsyncValue = ref.watch(userNotifierProvider);
+    final authView = ref.watch(authViewModelProvider);
 
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: isDarkTheme ? Colors.black26 : Colors.white,
         automaticallyImplyLeading: false,
-        title: usernameAsyncValue.when(
-          data: (userdata) => Text(userdata.username, style: TextStyle(fontSize: 17, color: isDarkTheme ? Colors.white : Colors.black)),
-          loading: () => Text('Loading...', style: TextStyle(fontSize: 17, color: isDarkTheme ? Colors.white : Colors.black)),
-          error: (error, _) => Text('Error: $error', style: TextStyle(fontSize: 17, color: isDarkTheme ? Colors.white : Colors.black)),
-        ),
-        actions:  [
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const UserProfile(),
-                ),
-              );
-            },
-            child: const CircleAvatar(
-              radius: 18,
-              backgroundImage: AssetImage('assets/profile_pic.png'),
-            ),
-          ),
-          const SizedBox(width: 10),
-        ],
       ),
 
-      body: _selectedIndex == 0
-          ? _buildHomePageContent(isDarkTheme)
-          : _selectedIndex == 1
-          ? const SettingsPage()
-          : _selectedIndex == 2
-          ? const SettingsPage()
-          : const SettingsPage(),
       bottomNavigationBar: BottomNavBar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
         isDarkTheme: isDarkTheme,
       ),
+      body: _selectedIndex == 0
+          ? _buildHomePageContent(isDarkTheme)
+          : _selectedIndex == 1
+          ? FutureBuilder<bool>(
+        future: authView.isAdmin(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return snapshot.data == true ? const AdminJoinedChannelsPage() : const UsersJoinedChannelsPage();
+          } else {
+            return const UsersJoinedChannelsPage();
+          }
+        },
+      )
+          : _selectedIndex == 2
+          ? const UsersJoinedChannelsPage()
+          : const SettingsPage(),
     );
   }
 
   Widget _buildHomePageContent(bool isDarkTheme) {
     return Column(
       children: [
+         GestureDetector(child: const Text('Sign In'), onTap: () {
+           Navigator.of(context).push(
+             MaterialPageRoute(
+               builder: (context) =>  const SignInPage(),
+             ),
+           );
+         }, ),
+
         // Main card with dynamic height
         Expanded(
           flex: 2,
@@ -92,7 +93,7 @@ class _HomeLandingPageState extends ConsumerState<HomeLandingPage> {
                 Card(
                   elevation: 8,
                   margin: const EdgeInsets.all(16),
-                  color: isDarkTheme ? Colors.black : Colors.white,
+                  color: isDarkTheme ? Colors.grey[600] : Colors.white,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
@@ -163,7 +164,22 @@ class _HomeLandingPageState extends ConsumerState<HomeLandingPage> {
                           ),
                         );
                       }
-                      // You can handle other indexes similarly or leave them for future use
+
+                      if (index == 2) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>  const AsmaUlHusna(),
+                          ),
+                        );
+                      }
+
+                      if (index == 3) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>  const KnowledgePage(),
+                          ),
+                        );
+                      }
                     },
 
                     child: Column(
