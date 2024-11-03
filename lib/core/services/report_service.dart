@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:maarifa/secrets/keys.dart';
 
 class ReportService {
-  final String fromEmail = 'noreply@maarifa.com';
 
   // Function to check the report count and send an email
   Future<void> checkReportAndSendEmail(String channelId, String? postId, String channelName, String type, ) async {
