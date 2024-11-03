@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:maarifa/secrets/keys.dart';
 
 class ReportService {
-  final String sendGridApiKey = "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";
-  final String adminEmail = 'laibaistkar0@gmail.com';
   final String fromEmail = 'noreply@maarifa.com';
 
   // Function to check the report count and send an email
