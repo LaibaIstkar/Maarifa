@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1042702112366",
+    "project_id": "maarifa-37a5c",
+    "storage_bucket": "maarifa-37a5c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1042702112366:android:4948a7283c3e777acdf87f",
+        "android_client_info": {
+          "package_name": "com.maarifa.maarifa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCY_PZPWfj-V4hWH0mNgC_M2zgkq-DbkJg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
